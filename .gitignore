@@ -90,3 +90,7 @@ data/precomputed/*
 
 # …except the DVC metafiles, which we *do* want in Git
 !data/precomputed/*.dvc
+
+# Ingore .devcontainer.json
+.devcontainer.json
+notebooks/05_data_analysis_and_feature_engineering.ipynb

@@ -35,7 +35,12 @@ class PeregrineDataset(Dataset):
 
     def _lazy_init(self):
         if self.h5 is None:
-            self.h5 = h5py.File(self.h5_path, "r")
+            self.h5 = h5py.File(
+                self.h5_path,
+                "r",
+                rdcc_nbytes=256 * 1024**2,  # 256 MB chunk cache
+                swmr=True,  # safe multi-process reads
+            )
             self.imgs = self.h5["slices/camera_data/visible/0"]
             self.sp = self.h5["slices/segmentation_results/8"]  # spatter
             self.st = self.h5["slices/segmentation_results/3"]  # streak
