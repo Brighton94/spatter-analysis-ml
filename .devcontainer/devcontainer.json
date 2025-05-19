@@ -10,7 +10,7 @@
 		// "source=/Volumes/Samsung T7/l-pbf-dataset,target=/mnt/ssd/l-pbf-dataset,type=bind,consistency=cached",
 		"source=${localWorkspaceFolder}/data,target=/mnt/data,type=bind,consistency=cached"
 	],
-	"runArgs": ["--shm-size=8g"],
+	"runArgs": ["--shm-size=8g", "--gpus=all"],
 	"workspaceFolder": "/piml-in-metal-am",
 	"customizations": {
 		"vscode": {

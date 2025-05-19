@@ -14,7 +14,8 @@ USER $USERNAME
 ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip --user \
- && pip install --user torch torchvision ultralytics
+ && pip install --user torch torchvision --index-url https://download.pytorch.org/whl/cu121 \
+ && pip install --user ultralytics
 
 WORKDIR /home/${USERNAME}/piml-in-metal-am
 COPY --chown=${USERNAME}:${USERNAME} pyproject.toml README.md ./
