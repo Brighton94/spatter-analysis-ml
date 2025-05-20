@@ -23,7 +23,7 @@ def part_anomaly_fractions(
         max_pid = int(ds_part[:layers_per_chunk].max())
 
     total_px = np.zeros(max_pid + 1, dtype=np.int64)
-    anomaly_px = np.zeros_like(total_px)
+    anomaly_px = np.zeros_like(total_px, dtype=np.float64)
 
     for start in range(0, n_layers, layers_per_chunk):
         stop = min(start + layers_per_chunk, n_layers)

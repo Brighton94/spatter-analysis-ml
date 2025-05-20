@@ -44,3 +44,6 @@ def layer_dataframe(h5: h5py.File) -> pd.DataFrame:
     df["streak_px"] = count_pixels_stream(h5["slices/segmentation_results/3"], upto=n)
 
     return df
+
+
+__all__ = ["count_pixels_stream", "layer_dataframe"]
