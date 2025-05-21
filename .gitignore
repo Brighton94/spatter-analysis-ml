@@ -48,9 +48,6 @@ coverage.xml
 .ipynb_checkpoints
 notebooks/*.pt # Ignore YOLO weights in notebooks
 
-# Ignore all files in notebooks except 01_eda_and_data_preparation.ipynb
-notebooks/*
-!notebooks/01_eda_and_data_preparation.ipynb
 
 # Ignore all run/ folders recursively
 runs/
