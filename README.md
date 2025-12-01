@@ -1,7 +1,7 @@
 # LPBF Spatter Analysis with Physics-Guided Machine Learning
 
 This repository contains code and experiments for the project behind the paper
-**"Investigating how spatter evolves in metal additive manufacturing processes with machine learning"** (presented at RAPDASA 2025). The goal is to analyze how spatter and melt-pool instabilities develop during Laser Powder Bed Fusion (LPBF), using physics-informed features and machine-learning methods - and to demonstrate that minimal physics guidance can significantly improve data efficiency and predictive robustness.
+**"Investigating how spatter evolves in metal additive manufacturing processes with machine learning"** (presented at RAPDASA 2025). The goal is to analyze how spatter and instabilities develop during Laser Powder Bed Fusion (LPBF), using physics-informed features and machine-learning methods - and to demonstrate that minimal physics guidance can significantly improve data efficiency and predictive robustness.
 
 📄 **[Read the full paper](https://www.matec-conferences.org/articles/matecconf/pdf/2025/11/matecconf_rapdasa2025_05001.pdf)**
 
@@ -12,6 +12,7 @@ This repository contains code and experiments for the project behind the paper
 -   Instead of using large deep-vision models (e.g., Transformers), we engineer physics-based features derived from domain knowledge (e.g., thermal, fluid, melt-pool dynamics). On top of that, we impose light physics constraints to guide a machine-learning model.
 -   The resulting physics-guided ML model achieves strong predictive performance using approximately 40% less training data compared to a standard multilayer-perceptron baseline.
 -   The findings demonstrate that minimal physics knowledge - when properly encoded - can improve data efficiency and reliability, making real-time LPBF defect monitoring more feasible.
+-   **This repository was built with MLOps best practices in mind**, providing a clear path from research notebooks to production-ready deployments on real-time manufacturing systems.
 
 ## Repository Structure
 
@@ -80,11 +81,17 @@ python src/evaluate.py --model_path path/to/model
 
 ## HDF5 Viewer Application
 
-A custom GUI application (`src/hdf5_viewer.py`) was created to efficiently explore and analyze the large HDF5 datasets from ORNL. Standard HDF5 tools lack specialized features for visualizing LPBF-specific data like layer-by-layer images, scan paths, and anomaly distributions. This viewer provides an interactive interface to navigate through builds, inspect camera feeds, overlay segmentation masks, and correlate process parameters with observed defects—streamlining the exploratory data analysis workflow.
+A custom GUI application (`src/hdf5_viewer.py`) was created to efficiently explore and analyze the large HDF5 datasets from ORNL. Standard HDF5 tools lack specialized features for visualizing LPBF-specific data like layer-by-layer images, scan paths, and anomaly distributions. This viewer provides an interactive interface to navigate through builds, inspect camera feeds, overlay segmentation masks, and correlate process parameters with observed defects; streamlining the exploratory data analysis workflow.
 
 <p align="center">
-  <img src="docs/images/hdf5_viewer_scans.png" width="45%" alt="HDF5 Viewer - Scan Paths" />
-  <img src="docs/images/hdf5_viewer_spatter.png" width="45%" alt="HDF5 Viewer - Spatter Analysis" />
+  <picture>
+    <source media="(max-width: 768px)" srcset="docs/images/hdf5_viewer_scans.png" />
+    <img src="docs/images/hdf5_viewer_scans.png" width="45%" alt="HDF5 Viewer - Scan Paths" />
+  </picture>
+  <picture>
+    <source media="(max-width: 768px)" srcset="docs/images/hdf5_viewer_spatter.png" />
+    <img src="docs/images/hdf5_viewer_spatter.png" width="45%" alt="HDF5 Viewer - Spatter Analysis" />
+  </picture>
 </p>
 
 ## Running the GUI viewer (hdf5_viewer) on Linux
@@ -132,15 +139,6 @@ For detailed results - tables, plots, performance metrics - see the /experiments
 -   Fully data-driven deep-learning approaches (e.g. vision-transformers) often require very large datasets - not always available in research or industrial settings.
 -   By introducing physics-guided ML, this project demonstrates a middle ground: combining domain knowledge with ML to reduce data requirement while maintaining - or improving - predictive power.
 -   This approach may be more accessible for researchers and practitioners working with limited data, and can facilitate real-time defect monitoring in actual manufacturing environments.
-
-## Suitable Use Cases
-
-This code is useful if you:
-
--   work on LPBF (or similar additive-manufacturing) defect analysis / monitoring,
--   want a reproducible pipeline combining physics-based feature engineering with ML,
--   aim to reproduce or extend the experiments from the paper,
--   prefer data-efficient, interpretable ML rather than large “black-box” vision networks.
 
 ## Contributors and Future Extensions
 
