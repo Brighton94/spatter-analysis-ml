@@ -60,7 +60,7 @@ git clone https://github.com/Brighton94/spatter-analysis-ml.git
 cd spatter-analysis-ml
 
 # Create data directories (if not using devcontainer)
-mkdir -p data/precomputed data/tcr_phase1_build2 data/legacy
+mkdir -p data
 
 # (Optional) create virtual environment
 python -m venv venv
@@ -69,15 +69,9 @@ source venv/bin/activate   # Linux / macOS
 
 # Install dependencies
 pip install -e ".[dev]"
-
-# Run feature engineering + model training pipeline
-python src/train.py --config configs/your_config.yaml
-
-# Evaluate model
-python src/evaluate.py --model_path path/to/model
 ```
 
-**Note:** If using the devcontainer, the data directories will be created automatically on container startup.
+**Note:** If using the devcontainer, the data directory will be created automatically on container startup.
 
 ## HDF5 Viewer Application
 
