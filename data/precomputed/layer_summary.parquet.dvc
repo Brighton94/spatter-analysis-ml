@@ -1,5 +1,0 @@
-outs:
-- md5: e1f22d134ce544191e9fdcc1e0949625
-  size: 26674
-  hash: md5
-  path: layer_summary.parquet

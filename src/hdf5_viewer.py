@@ -18,12 +18,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm, collections, colors
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 from src.config import get_dataset_path
 
 ################################################################################
 # Configuration
 ################################################################################
-path_file = get_dataset_path("tcr_phase1_build1")
+path_file = get_dataset_path("tcr_phase1_build2")
 if path_file is None:
     raise FileNotFoundError(
         "Dataset not found. Please check the configuration and data directory."

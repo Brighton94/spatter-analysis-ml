@@ -1,17 +1,16 @@
 {
-	"name": "PIML in Metal AM",
+	"name": "LPBF Spatter Analysis ML",
 	"build": {
 		"dockerfile": "./Dockerfile",
 		"context": ".."
 	},
 	"mounts": [
-		"source=${localWorkspaceFolder},target=/piml-in-metal-am,type=bind,consistency=cached",
-		// "source=/media/brighton/Samsung T7/l-pbf-dataset,target=/mnt/ssd/l-pbf-dataset,type=bind,consistency=cached",
-		// "source=/Volumes/Samsung T7/l-pbf-dataset,target=/mnt/ssd/l-pbf-dataset,type=bind,consistency=cached",
-		"source=${localWorkspaceFolder}/data,target=/mnt/ssd/l-pbf-dataset,type=bind,consistency=cached"
+		"source=${localWorkspaceFolder},target=/workspaces/spatter-analysis-ml,type=bind,consistency=cached",
+		"source=/media/brighton/Samsung T7/l-pbf-dataset,target=/mnt/ssd/l-pbf-dataset,type=bind,consistency=cached"
+		// "source=/Volumes/Samsung T7/l-pbf-dataset,target=/mnt/ssd/l-pbf-dataset,type=bind,consistency=cached"
 	],
-	"runArgs": ["-e", "PYTHONPATH=/workspaces/piml-in-metal-am:${PYTHONPATH}", "--shm-size=8g", "--gpus=all"],
-	"workspaceFolder": "/piml-in-metal-am",
+	"runArgs": ["--shm-size=8g", "--gpus=all"],
+	"workspaceFolder": "/workspaces/spatter-analysis-ml",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -44,6 +43,6 @@
 			}
 		}
 	},
-	"postCreateCommand": "",
+	"postCreateCommand": "mkdir -p data",
 	"remoteUser": "vscode"
 }
