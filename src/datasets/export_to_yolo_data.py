@@ -15,13 +15,9 @@ import cv2
 import h5py
 import numpy as np
 from src.config import CLASS_ID_SPATTER, CLASS_ID_STREAK, get_dataset_path
-from src.utils.yolo_segmentation import load_hdf5_slice
-from tqdm import tqdm  # terminal‑aware
+from src.utils.yolo_segment import load_hdf5_slice
+from tqdm import tqdm
 
-# ---------------------------------------------------------------------------
-# Configuration -------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# Force line‑buffered I/O so tqdm updates immediately in terminal
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
 if hasattr(sys.stderr, "reconfigure"):
@@ -45,10 +41,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%H:%M:%S",
 )
-
-# ---------------------------------------------------------------------------
-# Helpers -------------------------------------------------------------------
-# ---------------------------------------------------------------------------
 
 
 def contours_to_line(cnt: np.ndarray, cls: int, h: int, w: int) -> str:
@@ -77,11 +69,6 @@ def write_layer(
         lines.extend(contours_to_line(c, cls_id, h, w) for c in cnts if len(c) >= 3)
 
     (lbl_dir / f"{idx:06d}.txt").write_text("\n".join(lines))
-
-
-# ---------------------------------------------------------------------------
-# Main export ---------------------------------------------------------------
-# ---------------------------------------------------------------------------
 
 
 def export(
@@ -216,9 +203,6 @@ def export_layers(
             pass
 
 
-# ---------------------------------------------------------------------------
-# CLI wrapper ---------------------------------------------------------------
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     cli = argparse.ArgumentParser(
         description="Export YOLO‑v8 training data from Peregrine HDF5"

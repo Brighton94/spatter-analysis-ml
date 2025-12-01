@@ -17,7 +17,8 @@ dependencies = [
     "pandas>=2.2.0",
     "h5py>=3.10.0",
     "matplotlib>=3.8.0",
-    "transformers>=4.37.0",
+    "transformers[torch]>=4.41.0",
+    "accelerate>=0.28.0",
     "scikit-learn>=1.4.0",
     "seaborn>=0.13.0",
     "opencv-python>=4.5.0",
@@ -32,6 +33,10 @@ dependencies = [
     "mlflow>=2.21.2",
     "dvc[all]>=3.59.0",
     "tables>=3.8.0",
+    "plotly>=5.20.0",
+    "statsmodels>=0.14.0",
+    "xgboost>=2.0.0",
+    "shap>=0.45.0",
 ]
 
 [project.optional-dependencies]

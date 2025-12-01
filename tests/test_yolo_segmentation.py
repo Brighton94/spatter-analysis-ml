@@ -3,7 +3,7 @@
 import h5py
 import numpy as np
 import pytest
-from src.utils.yolo_segmentation import (
+from src.utils.yolo_segment import (
     compute_anomaly_area,
     extract_anomaly_mask,
     load_hdf5_slice,

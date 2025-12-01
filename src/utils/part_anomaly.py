@@ -1,63 +1,88 @@
 from __future__ import annotations
 
+import math
+
 import h5py
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 
 def part_anomaly_fractions(
     h5: h5py.File,
+    *,
     sp_id: int = 8,
     st_id: int = 3,
-    layers_per_chunk: int = 8,
+    layers_per_chunk: int | None = None,
+    desc: str = "Per-part anomaly",
+    show_progress: bool = True,
 ) -> pd.DataFrame:
-    """Compute per-part anomaly fraction (spatter ∨ streak) without loading the full 3-D volume."""  # noqa: E501
+    """Compute per-part anomaly fraction (spatter ∨ streak)."""
 
     ds_part = h5["slices/part_ids"]
     ds_spat = h5[f"slices/segmentation_results/{sp_id}"]
     ds_streak = h5[f"slices/segmentation_results/{st_id}"]
 
-    n_layers = ds_part.shape[0]
-    max_pid = int(ds_part.attrs.get("max_part_id", 0))  # optional metadata
-    if max_pid == 0:  # fallback: first cheap scan (no masks)
-        max_pid = int(ds_part[:layers_per_chunk].max())
+    if layers_per_chunk is None:
+        layers_per_chunk = ds_part.chunks[0] if ds_part.chunks else 32
 
-    total_px = np.zeros(max_pid + 1, dtype=np.int64)
+    n_layers = ds_part.shape[0]
+    n_iters = math.ceil(n_layers / layers_per_chunk)
+    max_pid_guess = int(ds_part.attrs.get("max_part_id", 0)) or int(
+        ds_part[:layers_per_chunk].max()
+    )
+
+    total_px = np.zeros(max_pid_guess + 1, dtype=np.int64)
     anomaly_px = np.zeros_like(total_px)
 
-    for start in range(0, n_layers, layers_per_chunk):
+    # Pre-allocate reusable read buffers (shape = (layers_per_chunk, H, W))
+    part_buf = np.empty((layers_per_chunk, *ds_part.shape[1:]), ds_part.dtype)
+    spat_buf = np.empty_like(part_buf, dtype=bool)
+    streak_buf = np.empty_like(part_buf, dtype=bool)
+
+    rng = range(0, n_layers, layers_per_chunk)
+    if show_progress:
+        rng = tqdm(rng, total=n_iters, desc=desc, unit="blk")
+
+    for start in rng:
         stop = min(start + layers_per_chunk, n_layers)
+        n_this = stop - start
+        dest_slice = slice(0, n_this)
 
-        part_blk = ds_part[start:stop]  # shape (L, H, W)  uint32
-        sp_blk = ds_spat[start:stop]  # bool
-        st_blk = ds_streak[start:stop]  # bool
-        an_blk = np.logical_or(sp_blk, st_blk)  # bool
+        # single read per dataset → into pre-allocated buffers
+        ds_part.read_direct(
+            part_buf, source_sel=slice(start, stop), dest_sel=dest_slice
+        )
+        ds_spat.read_direct(
+            spat_buf, source_sel=slice(start, stop), dest_sel=dest_slice
+        )
+        ds_streak.read_direct(
+            streak_buf, source_sel=slice(start, stop), dest_sel=dest_slice
+        )
 
-        # flatten so we can `bincount` on part IDs
-        part_flat = part_blk.ravel()
-        an_flat = an_blk.ravel().astype(np.int8)
+        part_flat = part_buf[:n_this].reshape(-1)  # view, no copy
+        mask = np.logical_or(spat_buf[:n_this], streak_buf[:n_this]).reshape(-1)
 
-        # ensure arrays large enough if we discover a higher ID mid-stream
         pid_max_blk = int(part_flat.max())
-        if pid_max_blk >= total_px.size:
-            grow_by = pid_max_blk - total_px.size + 1
-            total_px = np.pad(total_px, (0, grow_by))
-            anomaly_px = np.pad(anomaly_px, (0, grow_by))
+        if pid_max_blk >= total_px.size:  # grow arrays on-the-fly
+            grow = pid_max_blk - total_px.size + 1
+            total_px = np.pad(total_px, (0, grow))
+            anomaly_px = np.pad(anomaly_px, (0, grow))
 
-        total_px += np.bincount(part_flat, minlength=total_px.size)
-        anomaly_px += np.bincount(part_flat, weights=an_flat, minlength=total_px.size)
+        # accumulate counts in-place
+        np.add.at(total_px, part_flat, 1)
+        np.add.at(anomaly_px, part_flat[mask], 1)
 
-    # drop PID = 0 (background)
-    part_idx = np.nonzero(total_px)[0]  # keeps only parts actually present
-    part_idx = part_idx[part_idx != 0]
-
-    frac = anomaly_px[part_idx] / total_px[part_idx]
+    # Build dataframe (drop background PID 0 and never-seen IDs)
+    valid = total_px != 0
+    valid[0] = False
+    idx = np.flatnonzero(valid)
 
     return pd.DataFrame(
         {
-            "anomaly_frac": frac,
-            "total_px": total_px[part_idx],
-            "anomaly_px": anomaly_px[part_idx],
+            "anomaly_frac": anomaly_px[idx] / total_px[idx],
+            "total_px": total_px[idx],
+            "anomaly_px": anomaly_px[idx],
         },
-        index=part_idx,
+        index=idx,
     ).sort_values("anomaly_frac")
