@@ -1,88 +1,33 @@
-from __future__ import annotations
-
-import math
-
-import h5py
-import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm
 
 
 def part_anomaly_fractions(
-    h5: h5py.File,
+    csv_path: str,
     *,
-    sp_id: int = 8,
-    st_id: int = 3,
-    layers_per_chunk: int | None = None,
-    desc: str = "Per-part anomaly",
-    show_progress: bool = True,
+    sp_col: str = "spatter_px",
+    st_col: str = "streak_px",
+    total_col: str = "total_px",
+    pid_col: str = "part_id",
 ) -> pd.DataFrame:
-    """Compute per-part anomaly fraction (spatter ∨ streak)."""
+    """Aggregate anomaly fractions per printed part from the CSV."""
 
-    ds_part = h5["slices/part_ids"]
-    ds_spat = h5[f"slices/segmentation_results/{sp_id}"]
-    ds_streak = h5[f"slices/segmentation_results/{st_id}"]
+    df = pd.read_csv(csv_path)
 
-    if layers_per_chunk is None:
-        layers_per_chunk = ds_part.chunks[0] if ds_part.chunks else 32
+    required = {sp_col, st_col, total_col, pid_col}
+    missing = required.difference(df.columns)
+    if missing:
+        raise ValueError(f"CSV is missing columns: {missing}")
 
-    n_layers = ds_part.shape[0]
-    n_iters = math.ceil(n_layers / layers_per_chunk)
-    max_pid_guess = int(ds_part.attrs.get("max_part_id", 0)) or int(
-        ds_part[:layers_per_chunk].max()
+    # Sum the three pixel columns per part
+    agg = df.groupby(pid_col, as_index=True).agg(
+        total_px=pd.NamedAgg(column=total_col, aggfunc="sum"),
+        spatter_px=pd.NamedAgg(column=sp_col, aggfunc="sum"),
+        streak_px=pd.NamedAgg(column=st_col, aggfunc="sum"),
     )
 
-    total_px = np.zeros(max_pid_guess + 1, dtype=np.int64)
-    anomaly_px = np.zeros_like(total_px)
+    # Combine & compute fraction
+    agg["anomaly_px"] = agg["spatter_px"] + agg["streak_px"]
+    agg["anomaly_frac"] = agg["anomaly_px"] / agg["total_px"]
 
-    # Pre-allocate reusable read buffers (shape = (layers_per_chunk, H, W))
-    part_buf = np.empty((layers_per_chunk, *ds_part.shape[1:]), ds_part.dtype)
-    spat_buf = np.empty_like(part_buf, dtype=bool)
-    streak_buf = np.empty_like(part_buf, dtype=bool)
-
-    rng = range(0, n_layers, layers_per_chunk)
-    if show_progress:
-        rng = tqdm(rng, total=n_iters, desc=desc, unit="blk")
-
-    for start in rng:
-        stop = min(start + layers_per_chunk, n_layers)
-        n_this = stop - start
-        dest_slice = slice(0, n_this)
-
-        # single read per dataset → into pre-allocated buffers
-        ds_part.read_direct(
-            part_buf, source_sel=slice(start, stop), dest_sel=dest_slice
-        )
-        ds_spat.read_direct(
-            spat_buf, source_sel=slice(start, stop), dest_sel=dest_slice
-        )
-        ds_streak.read_direct(
-            streak_buf, source_sel=slice(start, stop), dest_sel=dest_slice
-        )
-
-        part_flat = part_buf[:n_this].reshape(-1)  # view, no copy
-        mask = np.logical_or(spat_buf[:n_this], streak_buf[:n_this]).reshape(-1)
-
-        pid_max_blk = int(part_flat.max())
-        if pid_max_blk >= total_px.size:  # grow arrays on-the-fly
-            grow = pid_max_blk - total_px.size + 1
-            total_px = np.pad(total_px, (0, grow))
-            anomaly_px = np.pad(anomaly_px, (0, grow))
-
-        # accumulate counts in-place
-        np.add.at(total_px, part_flat, 1)
-        np.add.at(anomaly_px, part_flat[mask], 1)
-
-    # Build dataframe (drop background PID 0 and never-seen IDs)
-    valid = total_px != 0
-    valid[0] = False
-    idx = np.flatnonzero(valid)
-
-    return pd.DataFrame(
-        {
-            "anomaly_frac": anomaly_px[idx] / total_px[idx],
-            "total_px": total_px[idx],
-            "anomaly_px": anomaly_px[idx],
-        },
-        index=idx,
-    ).sort_values("anomaly_frac")
+    # Return sorted, tidy frame
+    return agg[["anomaly_frac", "total_px", "anomaly_px"]].sort_values("anomaly_frac")

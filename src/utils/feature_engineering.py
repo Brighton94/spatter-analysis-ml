@@ -5,21 +5,29 @@ from collections.abc import Sequence
 import h5py
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 
 def count_pixels_stream(
     ds: h5py.Dataset,
+    *,
     block_layers: int = 32,
     axes: Sequence[int] = (1, 2),
     upto: int | None = None,
 ) -> np.ndarray:
-    """Vectorised pixel count, but streamed in small blocks to keep memory low."""
+    """Vectorised pixel count, streamed in blocks, *with* progress bar."""
+
     n_layers = ds.shape[0] if upto is None else min(ds.shape[0], upto)
     counts = np.empty(n_layers, dtype=np.int32)
 
-    for start in range(0, n_layers, block_layers):
+    for start in tqdm(
+        range(0, n_layers, block_layers),
+        desc="count_pixels",
+        unit="layer",
+        leave=False,
+    ):
         stop = min(start + block_layers, n_layers)
-        slab = ds[start:stop]  # loads ≤ (block_layers · H · W) voxels
+        slab = ds[start:stop]
         counts[start:stop] = np.count_nonzero(slab, axis=axes)
 
     return counts
