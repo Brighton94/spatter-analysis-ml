@@ -173,7 +173,7 @@ This research utilizes in-situ monitoring data from **Oak Ridge National Laborat
 
 **Important:** The ORNL dataset used in this work may be subject to access restrictions and data-use agreements. If you wish to reproduce this work:
 
-1. **Request access** to the ORNL LPBF dataset through appropriate channels
+1. **Request access** to the ORNL LPBF dataset: [A co-registered in-situ and ex-situ dataset from a Laser Powder Bed Fusion additive manufacturing process](https://impact.ornl.gov/en/datasets/a-co-registered-in-situ-and-ex-situ-dataset-from-a-laser-powder-b/)
 2. **Comply with all licensing terms** and data-use agreements stipulated by ORNL
 3. **Do not redistribute** the raw dataset without proper authorization
 4. **Cite appropriately** both this work and the original ORNL data source
